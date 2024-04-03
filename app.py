@@ -45,7 +45,7 @@ app.layout = dbc.Container([
             dbc.Col(dcc.Graph(
                 figure=fig,
                 config={'scrollZoom': True,'displayModeBar': False},
-            ), lg=6,    style={"max-height":"80vh"}),
+            ), lg=6, ),
             dbc.Col(grid, lg=6),
     ]), 
 ])
