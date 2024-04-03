@@ -28,23 +28,24 @@ grid = dag.AgGrid(
     columnDefs=columnDefs,
     defaultColDef={"filter": True},
     columnSize="autoSize",
-    dashGridOptions = {"suppressColumnVirtualisation": True, "rowHeight": 26}
+    dashGridOptions = {"suppressColumnVirtualisation": True, "rowHeight": 26},
+    style={"margin-left":"40px","max-height":"80vh"},
 )
 
 fig = px.line(df7, x="year", y="GDP per person", color="country", markers=True,
              title="GDP per person for G7 countries")
 fig.update_layout(dragmode="pan", showlegend=False, 
-                  margin={"l":80,"t":50,"r":0,"b":0}
+                  margin={"l":40,"t":50,"r":0,"b":0}
                   )
-fig.update_yaxes(fixedrange=True)
+#fig.update_yaxes(fixedrange=True)
 
 app.layout = dbc.Container([
     html.H3('Example Graph'),
     dbc.Row([
             dbc.Col(dcc.Graph(
                 figure=fig,
-                config={'scrollZoom': True,'displayModeBar': False}
-            ), lg=6),
+                config={'scrollZoom': True,'displayModeBar': False},
+            ), lg=6,    style={"max-height":"80vh"}),
             dbc.Col(grid, lg=6),
     ]), 
 ])
