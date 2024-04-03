@@ -1,84 +1,51 @@
 # From https://dash.plotly.com/tutorial
-# Import packages
-from dash import Dash, html, dash_table, dcc, callback, Output, Input
+from dash import Dash, html, dcc
 import dash_bootstrap_components as dbc
 import dash_ag_grid as dag
-import pandas as pd
 import plotly.express as px
 
-# Incorporate data
-df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/gapminder2007.csv')
+# data
 df = px.data.gapminder()
 df["lifeExp"] = df["lifeExp"].round(1)
 df["GDP per person"] = df["gdpPercap"].round(0)
-df = df.drop(columns="gdpPercap")
+df["Pop (m)"] = (df["pop"]/1000000.).round(1)
+df = df.drop(columns=["gdpPercap","pop","iso_num"]).rename(columns={"iso_alpha":"iso"})
 g7 = {"CAN","FRA","DEU","ITA","JPN","GBR","USA"}
-df7 = df[df["iso_alpha"].isin(g7)]
+df7 = df[df["iso"].isin(g7)]
 
-# Initialize the app
-app = Dash(__name__, 
-    external_stylesheets=[dbc.themes.BOOTSTRAP,
-                          #'https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css',
-])
+df["g7"] = ""
+df["g7"] = df["g7"].where(~df["iso"].isin(g7),"G7")
 
-# App layout
-columnDefs = [ {'field':col} for col in df.columns]
+# app and layout
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
+columnDefs = [{'field':"country"}, {'field':"year"}] + \
+        [ {'field':col} for col in df.columns if col not in {"country", "year"}]
 grid = dag.AgGrid(
-    id="getting-started-filter",
     rowData=df.to_dict("records"),
     columnDefs=columnDefs,
-    className="ag-theme-alpine"
+    defaultColDef={"filter": True},
+    columnSize="autoSize",
+    dashGridOptions = {"suppressColumnVirtualisation": True, "rowHeight": 26}
 )
 
 fig = px.line(df7, x="year", y="GDP per person", color="country", markers=True,
              title="GDP per person for G7 countries")
+fig.update_layout(dragmode="pan", showlegend=False, 
+                  margin={"l":80,"t":50,"r":0,"b":0}
+                  )
+fig.update_yaxes(fixedrange=True)
 
-app.layout = html.Div([
-        dbc.Row([
-            html.Div('Example Graph', className="text-center fs-3"),
-        ]),
-        dbc.Row([
-            dbc.RadioItems(options=[{"label": x, "value": x} for x in ['pop', 'lifeExp', 'gdpPercap']],
-                        value='lifeExp',
-                        inline=True,
-                        id='radio-buttons', className='bg-info rounded-1 my-2')
-        ],),
-        dbc.Row(
-            [
-                dbc.Col([
-                    grid
-                    #dash_table.DataTable(
-                    #    data=df.to_dict('records'), 
-                    #    page_size=12, 
-                        #style_table={'overflowX': 'auto'},
-                        #className="dbc",
-                    #)
-                    ],
-                    md=6,
-                    id='col-datatable',
-                ),
-                dbc.Col([
-                    #dcc.Graph(figure={}, id='fig-barchart')
-                    dcc.Graph(figure=fig),
-                    ],
-                    id='col-graph',
-                    md=6,
-                ),
-            ],
-            className='dbc',
-        ), 
-    ], className="page-body")
+app.layout = dbc.Container([
+    html.H3('Example Graph'),
+    dbc.Row([
+            dbc.Col(dcc.Graph(
+                figure=fig,
+                config={'scrollZoom': True,'displayModeBar': False}
+            ), lg=6),
+            dbc.Col(grid, lg=6),
+    ]), 
+])
 
-# Add controls to build the interaction
-@callback(
-    Output('fig-barchart', component_property='figure'),
-    Input(component_id='radio-buttons', component_property='value')
-)
-def update_graph(col_chosen):
-    fig = px.histogram(df, x='continent', y=col_chosen, histfunc='avg')
-    return fig
-
-# Run the app
 if __name__ == '__main__':
     app.run(debug=False)
