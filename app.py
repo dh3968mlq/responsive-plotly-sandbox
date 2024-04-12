@@ -1,4 +1,7 @@
-# From https://dash.plotly.com/tutorial
+"""
+A simple Dash app showing how display can in some (but not all) ways be
+made responsive and usable on a mobile
+"""
 from dash import Dash, html, dcc
 import dash_bootstrap_components as dbc
 import dash_ag_grid as dag
@@ -29,26 +32,28 @@ grid = dag.AgGrid(
     defaultColDef={"filter": True},
     columnSize="autoSize",
     dashGridOptions = {"suppressColumnVirtualisation": True, "rowHeight": 26},
-    style={"margin-left":"40px","max-height":"80vh"},
+    style={"margin-left":"10%","max-height":"90vh","max-width":"88%"},
 )
 
 fig = px.line(df7, x="year", y="GDP per person", color="country", markers=True,
              title="GDP per person for G7 countries")
 fig.update_layout(dragmode="pan", showlegend=False, 
-                  margin={"l":40,"t":50,"r":0,"b":0}
+                  margin={"l":80,"t":50,"r":0,"b":20},
                   )
-#fig.update_yaxes(fixedrange=True)
 
-app.layout = dbc.Container([
-    html.H3('Example Graph'),
-    dbc.Row([
-            dbc.Col(dcc.Graph(
-                figure=fig,
-                config={'scrollZoom': True,'displayModeBar': False},
-            ), lg=6, ),
-            dbc.Col(grid, lg=6),
-    ]), 
-])
+app.layout = dbc.Container(
+    [
+        html.H3('Example Graph'),
+        dbc.Row([
+                dbc.Col(dcc.Graph(
+                    figure=fig,
+                    config={'scrollZoom': True, 'displayModeBar': False},
+                ), lg=6, ),
+                dbc.Col(grid, lg=6),
+        ]), 
+    ],
+    fluid="lg"
+)
 
 if __name__ == '__main__':
     app.run(debug=False)
